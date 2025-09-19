@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: ai-fitting-backend
+    env: node
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DASHSCOPE_API_KEY
+        value: sk-9e6a56f2507e4efa8cf97149b4255ac9
+    healthCheckPath: /api/health
+
+databases:
+  - name: ai-fitting-mysql
+    databaseName: ai_tryClothes
+    user: root
+    plan: free
