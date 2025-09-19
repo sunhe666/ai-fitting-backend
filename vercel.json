@@ -19,5 +19,11 @@
     "app.js": {
       "maxDuration": 30
     }
-  }
+  },
+  "rewrites": [
+    {
+      "source": "/api/(.*)",
+      "destination": "/app.js"
+    }
+  ]
 }
