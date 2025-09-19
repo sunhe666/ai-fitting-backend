@@ -5,7 +5,7 @@
 
 require('dotenv').config();
 
-// 解析DATABASE_URL (Railway格式)
+// 解析DATABASE_URL (通用格式)
 function parseDatabaseUrl(databaseUrl) {
   if (!databaseUrl) return null;
   
@@ -26,6 +26,16 @@ function parseDatabaseUrl(databaseUrl) {
 }
 
 const databaseUrlConfig = parseDatabaseUrl(process.env.DATABASE_URL);
+
+// 腾讯云TDSQL-C配置
+const tencentConfig = {
+  username: process.env.TDSQL_USER || 'root',
+  password: process.env.TDSQL_PASSWORD || 'Sunhe2003',
+  database: process.env.TDSQL_DATABASE || 'ai_clothes',
+  host: process.env.TDSQL_HOST || 'gz-cynosdbmysql-grp-5efn5g8l.sql.tencentcdb.com',
+  port: process.env.TDSQL_PORT || 21487,
+  dialect: 'mysql'
+};
 
 const config = {
   development: {
@@ -60,7 +70,7 @@ const config = {
   },
   
   production: {
-    ...(databaseUrlConfig || {
+    ...(databaseUrlConfig || tencentConfig || {
       username: process.env.DB_USER || 'root',
       password: process.env.DB_PASSWORD || 'root',
       database: process.env.DB_NAME || 'ai_tryClothes',
