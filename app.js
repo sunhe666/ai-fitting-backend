@@ -170,7 +170,10 @@ async function startServer() {
   }
 }
 
-// 启动服务
-startServer();
+// 对于Vercel部署，不需要启动服务器，直接导出app
+if (process.env.NODE_ENV !== 'production' || !process.env.VERCEL) {
+  // 只在本地开发时启动服务器
+  startServer();
+}
 
 module.exports = app;
