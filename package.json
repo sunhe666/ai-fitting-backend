@@ -1,0 +1,43 @@
+{
+  "name": "ai-fitting-server",
+  "version": "1.0.0",
+  "description": "AI试衣服项目后端服务",
+  "main": "app.js",
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=8.0.0"
+  },
+  "scripts": {
+    "start": "node app.js",
+    "dev": "nodemon app.js",
+    "build": "echo 'No build step required'",
+    "test": "node examples/test-api.js",
+    "test:poll": "node examples/test-api.js --poll",
+    "db:init": "node scripts/db-manager.js init",
+    "db:status": "node scripts/db-manager.js status",
+    "db:cleanup": "node scripts/db-manager.js cleanup",
+    "db:backup": "node scripts/db-manager.js backup",
+    "db:test-data": "node scripts/db-manager.js test-data"
+  },
+  "keywords": [
+    "express",
+    "ai",
+    "fitting",
+    "nodejs"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "axios": "^1.6.0",
+    "body-parser": "^1.20.2",
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
+    "multer": "^1.4.5-lts.1",
+    "mysql2": "^3.15.0",
+    "sequelize": "^6.37.7"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
+  }
+}

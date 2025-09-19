@@ -1,0 +1,58 @@
+# Docker Compose配置文件 - MySQL数据库
+# 用于本地开发环境快速搭建数据库
+
+version: '3.8'
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: ai_tryon_mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: ai_tryon_2024
+      MYSQL_DATABASE: ai_tryon
+      MYSQL_USER: ai_tryon_user
+      MYSQL_PASSWORD: ai_tryon_pass
+      TZ: Asia/Shanghai
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+      - ./my.cnf:/etc/mysql/conf.d/my.cnf:ro
+    command: --default-authentication-plugin=mysql_native_password
+    networks:
+      - ai_tryon_network
+
+  # 可选：phpMyAdmin管理界面
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin:latest
+    container_name: ai_tryon_phpmyadmin
+    restart: always
+    environment:
+      PMA_HOST: mysql
+      PMA_PORT: 3306
+      PMA_USER: root
+      PMA_PASSWORD: ai_tryon_2024
+      MYSQL_ROOT_PASSWORD: ai_tryon_2024
+    ports:
+      - "8080:80"
+    depends_on:
+      - mysql
+    networks:
+      - ai_tryon_network
+
+volumes:
+  mysql_data:
+    driver: local
+
+networks:
+  ai_tryon_network:
+    driver: bridge
+
+# 使用说明：
+# 1. 启动数据库: docker-compose up -d mysql
+# 2. 启动管理界面: docker-compose up -d phpmyadmin
+# 3. 访问管理界面: http://localhost:8080
+# 4. 停止服务: docker-compose down
+# 5. 删除数据: docker-compose down -v
