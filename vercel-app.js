@@ -9,6 +9,7 @@ const bodyParser = require('body-parser');
 const multer = require('multer');
 const path = require('path');
 const { errorMiddleware } = require('./utils/errorHandler');
+const OSSService = require('./services/OSSService');
 require('dotenv').config();
 
 const app = express();
@@ -85,7 +86,7 @@ app.get('/api/health', async (req, res) => {
 // API路由
 app.use('/api/aitryon', require('./routes/aiTryon'));
 
-// 文件上传路由（简化版）
+// 文件上传路由（OSS版本）
 app.post('/api/upload', upload.single('image'), async (req, res) => {
   try {
     if (!req.file) {
@@ -96,24 +97,51 @@ app.post('/api/upload', upload.single('image'), async (req, res) => {
       });
     }
 
-    // 在Vercel环境中，文件存储在内存中
-    // 需要上传到云存储服务（如阿里云OSS、腾讯云COS等）
-    const fileInfo = {
-      filename: `vercel-${Date.now()}-${req.file.originalname}`,
-      originalname: req.file.originalname,
-      mimetype: req.file.mimetype,
-      size: req.file.size,
-      buffer: req.file.buffer.toString('base64') // 转为base64
-    };
+    // 获取上传参数
+    const imageType = req.body.image_type || 'general';
+    const userId = req.body.user_id || 'anonymous';
 
-    res.json({
+    console.log(`📤 开始上传文件到OSS: ${req.file.originalname} (${req.file.size} bytes)`);
+
+    // 上传到阿里云OSS
+    const ossResult = await OSSService.uploadFile(
+      req.file.buffer,
+      req.file.originalname,
+      req.file.mimetype,
+      imageType
+    );
+
+    if (!ossResult.success) {
+      throw new Error('OSS上传失败');
+    }
+
+    // 兼容原有API格式的响应
+    const responseData = {
       success: true,
       data: {
-        file: fileInfo,
-        url: `data:${req.file.mimetype};base64,${fileInfo.buffer}` // 临时base64 URL
+        filename: ossResult.data.filename,
+        originalname: ossResult.data.originalname,
+        mimetype: ossResult.data.mimetype,
+        size: ossResult.data.size,
+        url: ossResult.data.url,
+        fullUrl: ossResult.data.fullUrl,
+        // OSS特有信息
+        ossPath: ossResult.data.ossPath,
+        bucket: ossResult.data.bucket,
+        region: ossResult.data.region,
+        // 保持向后兼容
+        file: {
+          filename: ossResult.data.filename,
+          originalname: ossResult.data.originalname,
+          mimetype: ossResult.data.mimetype,
+          size: ossResult.data.size
+        }
       },
-      message: '文件上传成功（Vercel环境）'
-    });
+      message: '文件上传成功'
+    };
+
+    console.log(`✅ 文件上传OSS成功: ${ossResult.data.url}`);
+    res.json(responseData);
 
   } catch (error) {
     console.error('文件上传失败:', error);
