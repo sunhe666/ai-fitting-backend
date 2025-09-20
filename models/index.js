@@ -5,6 +5,12 @@
 const User = require('./User');
 const Image = require('./Image');
 const TryonTask = require('./TryonTask');
+const Admin = require('./Admin');
+const AdminLog = require('./AdminLog');
+const SystemStats = require('./SystemStats');
+const SystemAnnouncement = require('./SystemAnnouncement');
+const EnvConfig = require('./EnvConfig');
+const EnvChangeHistory = require('./EnvChangeHistory');
 
 // 定义模型关系
 // 用户与图片的关系（一对多）
@@ -52,9 +58,45 @@ TryonTask.belongsTo(Image, {
   as: 'resultImage'
 });
 
+// 管理员与操作日志的关系（一对多）
+Admin.hasMany(AdminLog, {
+  foreignKey: 'admin_id',
+  as: 'logs'
+});
+AdminLog.belongsTo(Admin, {
+  foreignKey: 'admin_id',
+  as: 'admin'
+});
+
+// 管理员与公告的关系（一对多）
+Admin.hasMany(SystemAnnouncement, {
+  foreignKey: 'created_by',
+  as: 'announcements'
+});
+SystemAnnouncement.belongsTo(Admin, {
+  foreignKey: 'created_by',
+  as: 'creator'
+});
+
+// 管理员与环境变量变更历史的关系（一对多）
+Admin.hasMany(EnvChangeHistory, {
+  foreignKey: 'admin_id',
+  as: 'envChanges'
+});
+EnvChangeHistory.belongsTo(Admin, {
+  foreignKey: 'admin_id',
+  as: 'admin'
+});
+
 // 导出所有模型
 module.exports = {
   User,
   Image,
-  TryonTask
+  TryonTask,
+  Admin,
+  AdminLog,
+  SystemStats,
+  SystemAnnouncement,
+  EnvConfig,
+  EnvChangeHistory
 };

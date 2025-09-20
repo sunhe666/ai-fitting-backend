@@ -3,7 +3,8 @@
  * 处理试衣任务相关的业务逻辑
  */
 
-const { TryonTask } = require('../models');
+const { TryonTask, User } = require('../models');
+const { Op } = require('sequelize');
 const ImageService = require('./ImageService');
 const UserService = require('./UserService');
 
@@ -412,6 +413,95 @@ class TryonService {
     } catch (error) {
       console.error('清理过期任务失败:', error);
       throw new Error(`清理过期任务失败: ${error.message}`);
+    }
+  }
+
+  /**
+   * 获取任务列表（管理员功能）
+   * @param {Object} options - 查询选项
+   * @returns {Object} 任务列表
+   */
+  async getTaskList(options = {}) {
+    try {
+      const {
+        page = 1,
+        limit = 20,
+        status = null,
+        mode = null,
+        user_id = null,
+        start_date = null,
+        end_date = null
+      } = options;
+      const offset = (page - 1) * limit;
+
+      const whereClause = {};
+      if (status) whereClause.task_status = status;
+      if (mode) whereClause.tryon_mode = mode;
+      if (user_id) whereClause.user_id = user_id;
+      if (start_date && end_date) {
+        whereClause.created_at = {
+          [Op.between]: [new Date(start_date), new Date(end_date)]
+        };
+      }
+
+      const { rows: tasks, count: total } = await TryonTask.findAndCountAll({
+        where: whereClause,
+        include: [
+          {
+            model: User,
+            as: 'user',
+            attributes: ['id', 'nickname', 'avatar_url']
+          }
+        ],
+        order: [['created_at', 'DESC']],
+        limit,
+        offset
+      });
+
+      return {
+        tasks,
+        pagination: {
+          total,
+          page,
+          limit,
+          pages: Math.ceil(total / limit)
+        }
+      };
+    } catch (error) {
+      console.error('获取任务列表失败:', error);
+      throw new Error(`获取任务列表失败: ${error.message}`);
+    }
+  }
+
+  /**
+   * 管理员删除任务
+   * @param {string} taskId - 任务ID
+   * @returns {boolean} 删除结果
+   */
+  async deleteTaskByAdmin(taskId) {
+    try {
+      const task = await TryonTask.findOne({
+        where: { task_id: taskId }
+      });
+
+      if (!task) {
+        throw new Error('任务不存在');
+      }
+
+      // 管理员可以删除任何任务
+      const deletedCount = await TryonTask.destroy({
+        where: { task_id: taskId }
+      });
+
+      if (deletedCount > 0) {
+        console.log(`管理员删除任务: ${taskId}`);
+        return true;
+      } else {
+        throw new Error('删除任务失败');
+      }
+    } catch (error) {
+      console.error('管理员删除任务失败:', error);
+      throw new Error(`删除任务失败: ${error.message}`);
     }
   }
 }

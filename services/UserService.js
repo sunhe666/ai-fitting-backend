@@ -4,6 +4,7 @@
  */
 
 const { User } = require('../models');
+const { Op } = require('sequelize');
 
 class UserService {
   /**
@@ -154,6 +155,73 @@ class UserService {
     } catch (error) {
       console.error('获取用户统计失败:', error);
       throw new Error(`获取用户统计失败: ${error.message}`);
+    }
+  }
+
+  /**
+   * 获取用户列表（管理员功能）
+   * @param {Object} options - 查询选项
+   * @returns {Object} 用户列表
+   */
+  async getUserList(options = {}) {
+    try {
+      const {
+        page = 1,
+        limit = 20,
+        status = null,
+        keyword = null
+      } = options;
+      const offset = (page - 1) * limit;
+
+      const whereClause = {};
+      if (status !== null) whereClause.status = status;
+      if (keyword) {
+        whereClause[Op.or] = [
+          { nickname: { [Op.like]: `%${keyword}%` } },
+          { openid: { [Op.like]: `%${keyword}%` } }
+        ];
+      }
+
+      const { rows: users, count: total } = await User.findAndCountAll({
+        where: whereClause,
+        order: [['created_at', 'DESC']],
+        limit,
+        offset
+      });
+
+      return {
+        users,
+        pagination: {
+          total,
+          page,
+          limit,
+          pages: Math.ceil(total / limit)
+        }
+      };
+    } catch (error) {
+      console.error('获取用户列表失败:', error);
+      throw new Error(`获取用户列表失败: ${error.message}`);
+    }
+  }
+
+  /**
+   * 更新用户状态
+   * @param {number} userId - 用户ID
+   * @param {number} status - 状态
+   * @returns {Object} 更新后的用户
+   */
+  async updateUserStatus(userId, status) {
+    try {
+      const user = await User.findByPk(userId);
+      if (!user) {
+        throw new Error('用户不存在');
+      }
+
+      await user.update({ status });
+      return user;
+    } catch (error) {
+      console.error('更新用户状态失败:', error);
+      throw new Error(`更新用户状态失败: ${error.message}`);
     }
   }
 }

@@ -39,12 +39,14 @@ const tencentConfig = {
 
 const config = {
   development: {
-    username: process.env.DB_USER || 'root',
-    password: process.env.DB_PASSWORD || 'root',
-    database: process.env.DB_NAME || 'ai_tryClothes',
-    host: process.env.DB_HOST || 'localhost',
-    port: process.env.DB_PORT || 3306,
-    dialect: 'mysql',
+    ...(databaseUrlConfig || {
+      username: process.env.DB_USER || 'root',
+      password: process.env.DB_PASSWORD || 'root',
+      database: process.env.DB_NAME || 'ai_tryClothes',
+      host: process.env.DB_HOST || 'localhost',
+      port: process.env.DB_PORT || 3306,
+      dialect: 'mysql'
+    }),
     dialectModule: require('mysql2'),
     timezone: '+08:00',
     define: {

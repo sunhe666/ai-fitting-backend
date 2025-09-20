@@ -38,6 +38,7 @@ const upload = multer({ storage: storage });
 
 // 引入路由
 const aiTryonRoutes = require('./routes/aiTryon');
+const adminRoutes = require('./routes/admin');
 
 // 基本路由
 app.get('/', (req, res) => {
@@ -64,6 +65,9 @@ app.get('/api/health', (req, res) => {
 
 // AI试衣相关路由
 app.use('/api/aitryon', aiTryonRoutes);
+
+// 后台管理相关路由
+app.use('/api/admin', adminRoutes);
 
 // 文件上传接口
 app.post('/api/upload', upload.single('image'), async (req, res) => {

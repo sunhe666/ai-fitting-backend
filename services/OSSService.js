@@ -9,13 +9,29 @@ const ossConfig = require('../config/oss');
 
 class OSSService {
   constructor() {
-    this.client = new OSS({
-      region: ossConfig.region,
-      accessKeyId: ossConfig.accessKeyId,
-      accessKeySecret: ossConfig.accessKeySecret,
-      bucket: ossConfig.bucket,
-      secure: ossConfig.secure
-    });
+    this.client = null;
+    this.enabled = false;
+    
+    // 检查是否配置了OSS参数
+    if (ossConfig.accessKeyId && ossConfig.accessKeySecret) {
+      try {
+        this.client = new OSS({
+          region: ossConfig.region,
+          accessKeyId: ossConfig.accessKeyId,
+          accessKeySecret: ossConfig.accessKeySecret,
+          bucket: ossConfig.bucket,
+          secure: ossConfig.secure
+        });
+        this.enabled = true;
+        console.log('✅ OSS服务已启用');
+      } catch (error) {
+        console.warn('⚠️ OSS初始化失败:', error.message);
+        this.enabled = false;
+      }
+    } else {
+      console.log('ℹ️ OSS服务未配置，将使用本地文件存储');
+      this.enabled = false;
+    }
   }
 
   /**
@@ -27,6 +43,10 @@ class OSSService {
    * @returns {Object} 上传结果
    */
   async uploadFile(buffer, originalname, mimetype, imageType = 'general') {
+    if (!this.enabled) {
+      throw new Error('OSS服务未启用，请配置OSS参数或使用本地文件存储');
+    }
+    
     try {
       // 生成唯一文件名
       const timestamp = Date.now();
@@ -87,6 +107,11 @@ class OSSService {
    * @returns {boolean} 删除结果
    */
   async deleteFile(ossPath) {
+    if (!this.enabled) {
+      console.warn('OSS服务未启用，跳过文件删除');
+      return true;
+    }
+    
     try {
       await this.client.delete(ossPath);
       console.log(`✅ OSS文件删除成功: ${ossPath}`);
@@ -167,6 +192,11 @@ class OSSService {
    * @returns {boolean} 连接状态
    */
   async checkConnection() {
+    if (!this.enabled) {
+      console.log('ℹ️ OSS服务未启用');
+      return false;
+    }
+    
     try {
       await this.client.getBucketInfo();
       console.log('✅ OSS连接正常');
@@ -175,6 +205,14 @@ class OSSService {
       console.error('❌ OSS连接失败:', error.message);
       return false;
     }
+  }
+  
+  /**
+   * 检查OSS服务是否启用
+   * @returns {boolean} 是否启用
+   */
+  isEnabled() {
+    return this.enabled;
   }
 }
 
