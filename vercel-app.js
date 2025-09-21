@@ -58,7 +58,7 @@ app.get('/api/health', async (req, res) => {
       database_configured: !!process.env.DATABASE_URL
     };
 
-    // 简单的数据库连接测试（不初始化表）
+    // 数据库连接测试
     if (process.env.DATABASE_URL) {
       try {
         const mysql = require('mysql2/promise');
@@ -66,11 +66,15 @@ app.get('/api/health', async (req, res) => {
         await connection.ping();
         await connection.end();
         healthData.database_connected = true;
+        console.log('✅ 数据库连接测试成功');
       } catch (dbError) {
-        console.warn('数据库连接测试失败:', dbError.message);
+        console.warn('❌ 数据库连接测试失败:', dbError.message);
         healthData.database_connected = false;
         healthData.database_error = dbError.message;
       }
+    } else {
+      healthData.database_connected = false;
+      healthData.database_error = 'DATABASE_URL未配置';
     }
 
     res.json(healthData);
@@ -85,6 +89,9 @@ app.get('/api/health', async (req, res) => {
 
 // API路由
 app.use('/api/aitryon', require('./routes/aiTryon'));
+
+// 后台管理路由
+app.use('/api/admin', require('./routes/admin'));
 
 // 文件上传路由（OSS版本）
 app.post('/api/upload', upload.single('image'), async (req, res) => {
